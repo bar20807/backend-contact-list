@@ -1,5 +1,7 @@
+require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
+const Contact = require('./models/contact')
 
 
 const app = express()
@@ -36,7 +38,38 @@ const db = {
 
 //En la ruta raiz, mandamos nada mas el db 
 app.get('/persons', (req, res) => {
-    res.json(db.persons)
+    Contact.find({}).then(
+      contacts => res.json(contacts)
+    )
+})
+
+app.delete('/persons/:id', (req, res) => {
+  Contact.findByIdAndDelete(req.params.id).then(
+    res.status(204).end()
+  ).catch(error => console.log('Se obtuvo un error al eliminar el contacto: ', error.message))
+})
+
+//Añadir contactos
+app.post('/persons', (req, res) => {
+  const newContact = req.body
+
+  if (!newContact) {
+    return res.status(400).json(
+      {
+        error: 'content missing'
+      }
+    )
+  }
+
+  const contact = new Contact({
+    name : newContact.name,
+    number: newContact.number
+  })
+
+  contact.save().then(
+    savedContact => res.json(savedContact)
+  )
+
 })
 
 //Configuracion del puerto
