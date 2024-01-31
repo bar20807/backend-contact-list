@@ -11,6 +11,20 @@ app.use(cors())
 app.use(express.static('build'))
 
 
+const unknownEndPoint = (req, res , next) => {
+  res.status(404).send({ error: 'unknown endpoint' })
+}
+
+const errorHandler = (error, req, res, next) => {
+  console.log(error.message)
+  if (error.name === 'CastError') {
+    return res.status(400).send({ error: 'malformatted id' })
+  }else if (error.name === 'ValidationError') {
+    return res.status(400).json({ error: error.message })
+  }
+  next(error)
+}
+
 const db = {
     "persons": [
       {
@@ -42,15 +56,24 @@ app.get('/persons', (req, res) => {
       contacts => res.json(contacts)
     )
 })
+//Mostramos un contacto en específico con el id
+app.get('/persons/:id', (req, res, next) => {
+  let id = req.params.id;
+  Contact.findById(id).then(
+    result => res.json(result)
+  ).catch(
+    err => next(err)
+  )
+})
 
-app.delete('/persons/:id', (req, res) => {
+app.delete('/persons/:id', (req, res, next) => {
   Contact.findByIdAndDelete(req.params.id).then(
     res.status(204).end()
-  ).catch(error => console.log('Se obtuvo un error al eliminar el contacto: ', error.message))
+  ).catch(error => next(error))
 })
 
 //Añadir contactos
-app.post('/persons', (req, res) => {
+app.post('/persons', (req, res, next) => {
   const newContact = req.body
 
   if (!newContact) {
@@ -67,10 +90,36 @@ app.post('/persons', (req, res) => {
   })
 
   contact.save().then(
-    savedContact => res.json(savedContact)
+    savedContact => savedContact.toJSON()
+  )
+  .then(
+    savedContactFormated => res.json(savedContactFormated)
+  ).catch(
+    error => next(error)
   )
 
 })
+
+//Actualizacion de un contacto existente
+app.put('/persons/:id', (req, res, next) => {
+  const updateOps = req.body;
+  const contact = {
+    name: updateOps.name,
+    number: updateOps.number
+  }
+  Contact.findByIdAndUpdate(updateOps.id, contact, {new: true}).then(
+    updatedContact => {
+      res.json(updatedContact)
+    }
+  ).catch(
+    error => next(error)
+  )
+}
+)
+app.use(unknownEndPoint)
+//middleware para errores
+app.use(errorHandler)
+
 
 //Configuracion del puerto
 const PORT = process.env.PORT || 3001
