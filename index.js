@@ -11,7 +11,7 @@ app.use(cors())
 app.use(express.static('build'))
 
 
-const unknownEndPoint = (req, res , next) => {
+const unknownEndPoint = (req, res) => {
   res.status(404).send({ error: 'unknown endpoint' })
 }
 
@@ -25,40 +25,40 @@ const errorHandler = (error, req, res, next) => {
   next(error)
 }
 
-const db = {
-    "persons": [
-      {
-        "name": "Arto Hellas",
-        "number": "046-32145665",
-        "id": 1
-      },
-      {
-        "name": "Ada Lovelace",
-        "number": "39-44-5323533",
-        "id": 2
-      },
-      {
-        "name": "Dan Abramov",
-        "number": "12-43-234345",
-        "id": 3
-      },
-      {
-        "name": "Mary Poppendieck",
-        "number": "39-23-6423122",
-        "id": 4
-      }
-    ]
-  }
+/*const db = {
+  'persons': [
+    {
+      'name': 'Arto Hellas',
+      'number': '046-32145665',
+      'id': 1
+    },
+    {
+      'name': 'Ada Lovelace',
+      'number': '39-44-5323533',
+      'id': 2
+    },
+    {
+      'name': 'Dan Abramov',
+      'number': '12-43-234345',
+      'id': 3
+    },
+    {
+      'name': 'Mary Poppendieck',
+      'number': '39-23-6423122',
+      'id': 4
+    }
+  ]
+}*/
 
 //En la ruta raiz, mandamos nada mas el db 
 app.get('/persons', (req, res) => {
-    Contact.find({}).then(
-      contacts => res.json(contacts)
-    )
+  Contact.find({}).then(
+    contacts => res.json(contacts)
+  )
 })
 //Mostramos un contacto en específico con el id
 app.get('/persons/:id', (req, res, next) => {
-  let id = req.params.id;
+  let id = req.params.id
   Contact.findById(id).then(
     result => res.json(result)
   ).catch(
@@ -92,17 +92,17 @@ app.post('/persons', (req, res, next) => {
   contact.save().then(
     savedContact => savedContact.toJSON()
   )
-  .then(
-    savedContactFormated => res.json(savedContactFormated)
-  ).catch(
-    error => next(error)
-  )
+    .then(
+      savedContactFormated => res.json(savedContactFormated)
+    ).catch(
+      error => next(error)
+    )
 
 })
 
 //Actualizacion de un contacto existente
 app.put('/persons/:id', (req, res, next) => {
-  const updateOps = req.body;
+  const updateOps = req.body
   const contact = {
     name: updateOps.name,
     number: updateOps.number
